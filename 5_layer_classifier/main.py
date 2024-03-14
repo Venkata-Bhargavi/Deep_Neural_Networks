@@ -11,8 +11,8 @@ def get_image_dimensions(image_path):
     return height, width, channels
 
 # Path to the directory containing the images
-authentic_dir = "/Users/bhargavi/PycharmProjects/Deep_Neural_Networks/5_layer/images/authentic"
-fake_dir = "/Users/bhargavi/PycharmProjects/Deep_Neural_Networks/5_layer/images/fake_images"
+authentic_dir = "/Users/bhargavi/PycharmProjects/Deep_Neural_Networks/5_layer_classifier/images/authentic"
+fake_dir = "/Users/bhargavi/PycharmProjects/Deep_Neural_Networks/5_layer_classifier/images/fake_images"
 
 # List all the image file paths in the authentic directory
 authentic_images = [os.path.join(authentic_dir, file) for file in os.listdir(authentic_dir) if file.endswith(".jpg") or file.endswith(".png")]
@@ -51,8 +51,8 @@ print("Number of testing labels:", len(test_labels))
 
 
 # Create directories for train and test images
-train_dir = '/Users/bhargavi/PycharmProjects/Deep_Neural_Networks/5_layer/images/train_images'
-test_dir = '/Users/bhargavi/PycharmProjects/Deep_Neural_Networks/5_layer/images/test_images'
+train_dir = '/Users/bhargavi/PycharmProjects/Deep_Neural_Networks/5_layer_classifier/images/train_images'
+test_dir = '/Users/bhargavi/PycharmProjects/Deep_Neural_Networks/5_layer_classifier/images/test_images'
 
 os.makedirs(train_dir, exist_ok=True)
 os.makedirs(test_dir, exist_ok=True)
@@ -66,8 +66,7 @@ for image_path in test_images:
     shutil.copy(image_path, os.path.join(test_dir, image_name))
 
 
-
-def main():
+def main(train_images, train_labels, test_images, test_labels):
     # Example usage:
     # input_dimensions = 224 * 224 * 3  # Update input dimensions based on image size
     hidden_layer_sizes = [10, 8, 8, 4]  # Define layer sizes according to the specification
@@ -84,20 +83,39 @@ def main():
     # Create MultiLayerPerceptron with normalization, regularization, and dropout
     mlp = MultiLayerPerceptron(input_dimensions, hidden_layer_sizes, output_size, activation_types, normalization_type, regularization, dropout)
 
-    # Load images from directory
-    train_images, train_labels = load_images_from_directory("train_directory_path")
-    test_images, test_labels = load_images_from_directory("test_directory_path")
+    print("Number of train images:", len(train_images))
+    print("Number of train labels:", len(train_labels))
+    print("Number of test images:", len(test_images))
+    print("Number of test labels:", len(test_labels))
 
-    # Convert images and labels to numpy arrays
-    train_images = np.array(train_images)
-    test_images = np.array(test_images)
-    train_labels = np.array(train_labels)
-    test_labels = np.array(test_labels)
+    # Ensure all images have the same dimensions
+    train_images_resized = []
+    test_images_resized = []
+    target_height = 256
+    target_width = 384
+    for image_path in train_images:
+        image = cv2.imread(image_path)
+        height, width, channels = get_image_dimensions(image_path)
+        resized_image = cv2.resize(image, (target_width, target_height))
+        train_images_resized.append(resized_image)
+
+    for image_path in test_images:
+        image = cv2.imread(image_path)
+        height, width, channels = get_image_dimensions(image_path)
+        resized_image = cv2.resize(image, (target_width, target_height))
+        test_images_resized.append(resized_image)
+
+    # Convert resized images to numpy arrays
+    train_images_resized = np.array(train_images_resized)
+    test_images_resized = np.array(test_images_resized)
 
     # Reshape images to match input dimensions
-    train_images = train_images.reshape(train_images.shape[0], -1)
-    test_images = test_images.reshape(test_images.shape[0], -1)
+    train_images = train_images_resized.reshape(train_images_resized.shape[0], -1)
+    test_images = test_images_resized.reshape(test_images_resized.shape[0], -1)
 
+    # Convert train and test labels to numpy arrays
+    train_labels = np.array(train_labels)
+    test_labels = np.array(test_labels)
     # Set batch size
     batch_size = 10
 
@@ -109,5 +127,10 @@ def main():
     test_outputs, test_loss = mlp.forward_propagation(test_images, test_labels, batch_size, training=False)
     print("Test Loss:", test_loss)
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    # Convert train and test image lists to numpy arrays
+    train_images = np.array(train_images)
+    test_images = np.array(test_images)
+
+    # Call the main function with numpy arrays
+    main(train_images, train_labels, test_images, test_labels)

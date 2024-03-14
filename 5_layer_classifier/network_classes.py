@@ -80,12 +80,13 @@ class Layer:
 
     def forward_propagation(self, inputs, targets, batch_size, training=True):
         num_samples = inputs.shape[0]
+        print("num_samples: ",num_samples)
         num_batches = num_samples // batch_size
 
         total_loss = 0
         for batch_idx in range(num_batches):
-            batch_inputs = inputs[batch_idx * batch_size : (batch_idx + 1) * batch_size]
-            batch_targets = targets[batch_idx * batch_size : (batch_idx + 1) * batch_size]
+            batch_inputs = inputs[batch_idx * batch_size: (batch_idx + 1) * batch_size]
+            batch_targets = targets[batch_idx * batch_size: (batch_idx + 1) * batch_size]
 
             if self.normalization_type == "z_score":
                 # Apply Z-score normalization
@@ -103,8 +104,10 @@ class Layer:
                     batch_inputs = self.dropout.forward_propagation(batch_inputs)
                 neuron.neuron(batch_inputs)
                 outputs.append(neuron.output)
-            outputs = np.array(outputs)
-            batch_loss = np.mean(np.square(outputs - batch_targets))
+            # outputs = np.array(outputs)
+            print("outputs: ",outputs)
+            print("batch_targets: ",batch_targets)
+            batch_loss = np.mean(np.square(outputs - batch_targets.astype(float)))  # Ensure batch_targets are converted to float
             if self.regularization:
                 for neuron in self.neurons:
                     batch_loss += self.regularization.l2_regularization_loss(neuron.weights)
@@ -180,8 +183,18 @@ def load_images_from_directory(directory):
     for filename in os.listdir(directory):
         if filename.endswith(".jpg") or filename.endswith(".png"):
             img_path = os.path.join(directory, filename)
-            label = filename.split("_")[0]  # Assuming file names are in the format "label_filename.jpg"
-            image = cv2.imread(img_path)
-            images.append(image)
-            labels.append(label)
+            # Assuming format is label_filename.jpg
+            label = filename.split("_")[0]  # Extract label from filename
+            try:
+                if label == "Au":
+                    images.append(cv2.imread(img_path))
+                    labels.append(0)
+                if label == "Sp":
+                    images.append(cv2.imread(img_path))
+                    labels.append(1)
+
+
+            except ValueError:
+                print(f"Ignoring file {filename}: Invalid label '{label}'")
+                continue
     return images, labels
