@@ -1,5 +1,3 @@
-# main.py
-
 from classes import NeuralNetwork, DenseLayer, relu, sigmoid
 import numpy as np
 import os
@@ -35,8 +33,10 @@ def main():
     X_train, X_test = X[:split_idx], X[split_idx:]
     y_train, y_test = y_one_hot[:split_idx], y_one_hot[split_idx:]
 
-    # Initialize neural network
+
     model = NeuralNetwork()
+
+    # Add layers to the model
     model.add_layer(DenseLayer(input_size=X.shape[1], output_size=10, activation=relu))
     model.add_layer(DenseLayer(input_size=10, output_size=8, activation=relu))
     model.add_layer(DenseLayer(input_size=8, output_size=8, activation=relu))
@@ -45,9 +45,9 @@ def main():
 
     # Train the neural network
     epochs = 100
-    learning_rate = 0.01
+    learning_rate = 0.001
     for epoch in range(epochs):
-        #iterating over each epoch
+        # Iterating over each epoch
         total_loss = 0
         for X, y in zip(X_train, y_train):
             X = X.reshape(1, -1)  # Reshape X to (1, num_features) for single sample
